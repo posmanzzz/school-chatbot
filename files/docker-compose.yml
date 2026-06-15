@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  # 1. FastAPIアプリケーション
+  api:
+    build:
+      context: ../
+      dockerfile: files/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./data:/app/data
+    # コンテナが停止した場合に常に再起動する
+    restart: always
+    environment:
+      # ホストマシンで動作しているOllamaに接続するための設定
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    # コンテナ内からホストOSに 'host.docker.internal' という名前でアクセスできるようにする
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # 2. データ更新用のスケジューラ
+  updater:
+    build:
+      context: .
+      # updater専用のDockerfileを別途作成します
+      dockerfile: Dockerfile.updater
+    volumes:
+      # apiサービスとファイルを共有するために同じディレクトリをマウント
+      - ./chroma_db:/app/chroma_db
+      - ./data:/app/data
+      # スクリプトもマウント
+      - ./advanced_scraper.py:/app/advanced_scraper.py
+      - ./vectordb.py:/app/vectordb.py
+      - ./update_data.sh:/app/update_data.sh
+      # 設定ファイルやその他の依存関係も必要に応じてマウント
+      - ./config.py:/app/config.py
+      - ./requirements.txt:/app/requirements.txt
+    restart: always
+
+networks:
+  default:
+    driver: bridge

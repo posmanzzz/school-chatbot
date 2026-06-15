@@ -1,0 +1,42 @@
+# 環境変数・シークレット
+.env
+.env.local
+.env.*.local
+*.env
+
+# Pythonキャッシュ
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# ChromaDB・スクレイピングデータ（大容量）
+files/chroma_db/
+files/data/scraped/
+
+# Node.js
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ビルド成果物
+*.egg-info/
+dist/
+build/
+
+# OS・エディタ
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# SSL証明書
+nginx/certbot/
+ssl/
+*.pem
+*.key
+*.crt
+
+# ログ
+*.log
+logs/

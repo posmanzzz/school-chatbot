@@ -1,0 +1,39 @@
+services:
+  app:
+    build: .
+    container_name: chatbot_app
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./files/chroma_db:/app/files/chroma_db
+      - ./files/data:/app/files/data
+    environment:
+      # Windows/Mac: host.docker.internal でホストのOllamaに接続
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+# Ollamaもコンテナで実行したい場合は以下を使用
+# docker-compose --profile with-ollama up
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    profiles:
+      - with-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # GPUを使用する場合（NVIDIA Docker runtime必須）
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

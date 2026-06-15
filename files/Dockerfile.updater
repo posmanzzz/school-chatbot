@@ -1,0 +1,23 @@
+# ベースイメージとして、先ほどと同じPythonイメージを使用
+FROM python:3.11-slim
+
+# cronとエディタをインストール
+RUN apt-get update && apt-get install -y cron vim
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# 必要なライブラリをインストール
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# update_data.shに実行権限を付与
+COPY update_data.sh /usr/local/bin/update_data.sh
+RUN chmod +x /usr/local/bin/update_data.sh
+
+# cronジョブを定義
+# 毎日AM3:00にupdate_data.shを実行し、ログを/proc/1/fd/1(コンテナの標準出力)に出力
+RUN echo "0 3 * * * /usr/local/bin/update_data.sh > /proc/1/fd/1 2>/proc/1/fd/2" | crontab -
+
+# cronデーモンをフォアグラウンドで起動
+CMD ["cron", "-f"]

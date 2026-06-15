@@ -1,0 +1,40 @@
+# 本番環境用 Dockerfile
+FROM python:3.11-slim
+
+# モデルキャッシュの場所を環境変数で指定
+ENV TRANSFORMERS_CACHE=/app/cache
+ENV SENTENCE_TRANSFORMERS_HOME=/app/cache
+
+# セキュリティ: 非rootユーザーを作成
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+# システム依存パッケージをインストール
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# 依存関係をインストール（キャッシュ効率化）
+COPY files/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# アプリケーションファイルをコピー
+COPY files/ /app/files/
+COPY PBL/ /app/PBL/
+
+# キャッシュディレクトリを作成し、/app全体の所有権を変更
+RUN mkdir /app/cache && chown -R appuser:appgroup /app
+
+# 非rootユーザーに切り替え
+USER appuser
+
+# 作業ディレクトリをfilesに変更
+WORKDIR /app/files
+
+# ポートを公開
+EXPOSE 8000
+
+# 本番環境用: gunicornでワーカー数を増やして起動
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

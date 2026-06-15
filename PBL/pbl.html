@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>近大高専チャット</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+</head>
+<body>
+  <!-- パーティクル背景 -->
+  <div id="particles-container"></div>
+  <div class="gradient-overlay"></div>
+
+  <!-- ログイン画面 -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-container">
+      <div class="login-header">
+        <img src="ai-icon.png" alt="AI Icon" class="login-icon">
+        <h1>近大高専チャット</h1>
+        <p>学校の情報について何でも聞けるAIアシスタント</p>
+      </div>
+      <button id="google-login-btn" class="google-login-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Googleでログイン
+      </button>
+      <p class="login-note">ログインすると会話履歴が保存されます</p>
+    </div>
+  </div>
+
+  <!-- メイン画面 -->
+  <div id="main-app" class="main-app hidden">
+
+    <!-- アラートバナー -->
+    <div id="alert-banner" class="alert-banner hidden"></div>
+
+    <header class="header">
+      <div class="header-left">
+        <img src="ai-icon.png" alt="AI Icon" class="header-icon">
+        <h1>近大高専チャット</h1>
+        <div id="api-status" class="api-status offline">
+          <span class="status-dot"></span>
+          <span class="status-text">接続中...</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div id="user-info" class="user-info">
+          <img id="user-avatar" class="user-avatar" src="" alt="User">
+          <span id="user-name" class="user-name"></span>
+        </div>
+        <button id="history-btn" class="icon-btn" title="検索履歴">
+          <i class="fas fa-history"></i>
+        </button>
+        <button id="clear-btn" class="icon-btn" title="会話をクリア">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+        <button id="toggle-btn" class="icon-btn" title="ダークモード切替">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button id="logout-btn" class="icon-btn" title="ログアウト">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div id="chat-container">
+        <div id="chat-box">
+          <div class="welcome-message">
+            <i class="fas fa-comment-dots"></i>
+            <p>こんにちは！近大高専について何でも聞いてください。</p>
+          </div>
+
+          <div class="quick-questions">
+            <p class="quick-questions-label">よくある質問:</p>
+            <div class="quick-questions-list">
+              <button class="quick-question-btn" data-question="入学試験について教えてください">
+                <i class="fas fa-graduation-cap"></i> 入学試験
+              </button>
+              <button class="quick-question-btn" data-question="学科の特徴を教えてください">
+                <i class="fas fa-flask"></i> 学科紹介
+              </button>
+              <button class="quick-question-btn" data-question="年間行事予定を教えてください">
+                <i class="fas fa-calendar"></i> 行事予定
+              </button>
+              <button class="quick-question-btn" data-question="取得できる資格について教えてください">
+                <i class="fas fa-certificate"></i> 資格取得
+              </button>
+              <button class="quick-question-btn" data-question="部活動について教えてください">
+                <i class="fas fa-futbol"></i> 部活動
+              </button>
+              <button class="quick-question-btn" data-question="寮について教えてください">
+                <i class="fas fa-building"></i> 学生寮
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="typing-indicator" class="typing-indicator hidden">
+          <div class="typing-avatar">
+            <img src="ai-icon.png" alt="AI Typing">
+          </div>
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+
+        <form id="chat-form">
+          <div class="input-options">
+            <label class="web-search-toggle" title="Web検索を有効にする">
+              <input type="checkbox" id="web-search-checkbox">
+              <i class="fas fa-globe"></i>
+              <span>Web検索</span>
+            </label>
+          </div>
+          <div class="input-row">
+            <textarea id="user-input" placeholder="メッセージを入力..." rows="1" required></textarea>
+            <button type="submit" id="submit-btn">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <nav class="side-links">
+        <h3><i class="fas fa-link"></i> クイックリンク</h3>
+        <ul>
+          <li>
+            <a href="https://www.ktc.ac.jp/img/students/schedule/2025/2025_yotei_kouki.pdf" target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-calendar-alt"></i>
+              令和7年後期行事予定表
+            </a>
+          </li>
+          <li>
+            <a href="https://www.ktc.ac.jp/img/students/schedule/2026/2026_yotei_zenki.pdf" target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-calendar-alt"></i>
+              令和8年前期行事予定表
+            </a>
+          </li>
+          <li>
+            <a href="https://www.ktc.ac.jp/img/students/shikaku/shikaku_syutoku_list_2025.pdf" target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-certificate"></i>
+              資格支援表
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </main>
+
+    <!-- 検索履歴パネル -->
+    <div id="history-panel" class="history-panel hidden">
+      <div class="history-panel-header">
+        <h3><i class="fas fa-history"></i> 検索履歴</h3>
+        <button id="history-close-btn" class="history-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="history-empty">検索履歴がありません</p>
+      </div>
+      <button id="history-clear-btn" class="history-clear-btn">
+        <i class="fas fa-trash-alt"></i> 履歴をクリア
+      </button>
+    </div>
+    <div id="history-overlay" class="history-overlay hidden"></div>
+  </div>
+
+  <div id="copy-toast" class="copy-toast hidden">
+    <i class="fas fa-check"></i> コピーしました
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script src="firebase-config.js"></script>
+  <script src="schedule-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

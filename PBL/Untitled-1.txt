@@ -1,0 +1,1 @@
+API_KEY="ここにあなたのGoogle_AI_APIキーを貼り付けます"

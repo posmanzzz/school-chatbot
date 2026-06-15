@@ -1,0 +1,58 @@
+services:
+  # Nginx リバースプロキシ + SSL終端
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    depends_on:
+      - app
+    restart: always
+    networks:
+      - webnet
+
+  # SSL証明書取得・更新用
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - webnet
+
+  # メインアプリケーション
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: chatbot_app
+    expose:
+      - "8000"
+    volumes:
+      - ./files/chroma_db:/app/files/chroma_db
+      - ./files/data:/app/files/data
+    environment:
+      # 別サーバーのOllamaのURLを指定（デプロイ時に変更）
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama-server:11434}
+      - ENVIRONMENT=production
+    restart: always
+    networks:
+      - webnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  webnet:
+    driver: bridge
